@@ -1,10 +1,9 @@
-# Figma Console MCP Server
+# Figma Console MCP Server — Obra Autodocs fork
 
 [![MCP](https://img.shields.io/badge/MCP-Compatible-blue)](https://modelcontextprotocol.io/)
-[![npm](https://img.shields.io/npm/v/figma-console-mcp)](https://www.npmjs.com/package/figma-console-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Documentation](https://img.shields.io/badge/docs-docs.figma--console--mcp.southleft.com-0D9488)](https://docs.figma-console-mcp.southleft.com)
-[![Sponsor](https://img.shields.io/badge/Sponsor-southleft-ea4aaa?logo=github-sponsors&logoColor=white)](https://github.com/sponsors/southleft)
+
+> **This is an [Obra Studio](https://obra.studio) fork** of [`figma-console-mcp`](https://github.com/southleft/figma-console-mcp) by [Southleft](https://github.com/southleft) (MIT). It adds **Obra Autodocs** integration — `figma_generate_autodocs` / `figma_remove_autodocs` run the [Obra Autodocs](https://www.figma.com/community/plugin/1603778616137404487) generator from *inside* the Desktop Bridge sandbox, so you can document component-variant sets without switching plugins (which would drop the Bridge connection). Published as `@obra-studio/figma-console-mcp`. All original functionality and credit belong to Southleft.
 
 > **Your design system as an API.** Model Context Protocol server that bridges design and development—giving AI assistants complete access to Figma for **extraction**, **creation**, **debugging**, and **bidirectional token sync**.
 

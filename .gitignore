@@ -217,3 +217,6 @@ Temporary Items
 # Claude Code agent worktrees and Playwright CLI debug artifacts
 .claude/worktrees/
 .playwright-cli/
+
+# Obra Autodocs: inspection-only stripped body (generated; .generated.ts is the committed artifact)
+src/vendor/obra-autodocs/autodocs-body.js

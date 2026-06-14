@@ -1,12 +1,15 @@
 {
-	"name": "figma-console-mcp",
-	"version": "1.31.0",
-	"description": "The most comprehensive MCP server for Figma — design tokens, variables, components, write tools, version history diff, accessibility audits, FigJam, Slides, and more. Local (WebSocket Desktop Bridge plugin) and Cloudflare Workers (paired + remote) modes.",
+	"name": "@obra-studio/figma-console-mcp",
+	"version": "1.32.0",
+	"description": "Obra Studio fork of figma-console-mcp (by Southleft) adding Obra Autodocs: generate labeled component-variant documentation from inside the Desktop Bridge. The most comprehensive MCP server for Figma — design tokens, variables, components, write tools, version history diff, accessibility audits, FigJam, Slides, and more.",
 	"type": "module",
 	"main": "dist/local.js",
 	"types": "dist/local.d.ts",
 	"bin": {
 		"figma-console-mcp": "./dist/local.js"
+	},
+	"publishConfig": {
+		"access": "public"
 	},
 	"files": [
 		"dist",
@@ -31,7 +34,8 @@
 		"format": "biome format --write",
 		"lint:fix": "biome lint --fix",
 		"cf-typegen": "wrangler types",
-		"type-check": "tsc --noEmit"
+		"type-check": "tsc --noEmit",
+		"build:autodocs": "node scripts/build-autodocs-runtime.mjs"
 	},
 	"keywords": [
 		"mcp",
@@ -48,12 +52,16 @@
 		"claude",
 		"cloudflare"
 	],
-	"author": "Southleft",
+	"author": "Obra Studio",
+	"contributors": [
+		"Southleft (original figma-console-mcp)"
+	],
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/southleft/figma-console-mcp.git"
+		"url": "https://github.com/Obra-Studio/figma-console-mcp-autodocs.git"
 	},
+	"homepage": "https://github.com/Obra-Studio/figma-console-mcp-autodocs#readme",
 	"engines": {
 		"node": ">=18.0.0"
 	},

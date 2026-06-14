@@ -5,6 +5,19 @@ All notable changes to Figma Console MCP will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.32.0] - 2026-06-14
+
+First release of the **Obra Studio fork** (`@obra-studio/figma-console-mcp`), forked from Southleft's `figma-console-mcp` v1.31.0. Adds Obra Autodocs generation that runs inside the Desktop Bridge, so documenting component sets no longer means switching to the Autodocs plugin and tearing down the MCP connection.
+
+### Added
+
+- **`figma_generate_autodocs`** — generates Obra Autodocs documentation (labeled variant grid with brackets/labels, the same output as the Autodocs plugin's "Generate docs") around a selected component set or component. Params: `nodeId` (optional target), `showGrid`, `color`, `showBooleanVisibility`, `showNestedInstances`, `fontFamily`. The vendored Obra Autodocs plugin code (`src/vendor/obra-autodocs/code.js`) has its three top-level UI-init statements stripped (`scripts/build-autodocs-runtime.mjs` → `npm run build:autodocs`) and is injected over the same execute bridge as `figma_execute` — so the Desktop Bridge stays connected throughout (running the plugin itself swaps the active plugin and drops the connection).
+- **`figma_remove_autodocs`** — removes Autodocs documentation from a component set or component (mirrors the plugin's "Remove docs").
+
+### Changed
+
+- Forked and renamed to `@obra-studio/figma-console-mcp`; repository moved to `Obra-Studio/figma-console-mcp-autodocs`. Original `figma-console-mcp` is MIT by Southleft and all upstream functionality/credit is retained.
+
 ## [1.31.0] - 2026-06-05
 
 Fixes the most-reported reliability problem with the Desktop Bridge: the connection between your MCP client and Figma dropping, and staying down until you close the plugin, restart Claude Code, or manually hunt and kill ports. The root cause was never a flaky network — it was **zombie MCP server processes** squatting the WebSocket port range (9223–9232) after a bad shutdown, so each fresh server was bumped to a port with no plugin attached. This release makes those zombies impossible to create and reaps any that already exist, and pairs it with a plugin that reconnects itself instead of needing a restart.

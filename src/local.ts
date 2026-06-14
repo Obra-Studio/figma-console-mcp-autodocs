@@ -40,6 +40,7 @@ import { registerLibraryTools, registerLibraryVariableTools } from "./core/libra
 import { registerAccessibilityTools } from "./core/accessibility-tools.js";
 import { registerDiagnoseTool } from "./core/diagnose-tool.js";
 import { registerWriteTools } from "./core/write-tools.js";
+import { registerAutodocsTools } from "./core/autodocs-tools.js";
 import { registerTokensTools } from "./core/tokens-tools.js";
 import { wrapServerForIdentity } from "./core/identity.js";
 import { PACKAGE_ROOT } from "./core/resolve-package-root.js";
@@ -2838,6 +2839,11 @@ Without libraryFileKey/libraryFileUrl, searches the currently open file (local c
 		// design-token setup, accessibility audits, etc.). Sourced from src/core/write-tools.ts
 		// so local mode and cloud mode share the same 30 implementations — no risk of drift.
 		registerWriteTools(this.server, () => this.getDesktopConnector());
+
+		// Register Obra Autodocs generation/removal tools (figma_generate_autodocs,
+		// figma_remove_autodocs). Runs the vendored plugin code inside the Desktop
+		// Bridge sandbox so the connection survives (running the plugin would not).
+		registerAutodocsTools(this.server, () => this.getDesktopConnector());
 
 		// Register token sync tools — figma_export_tokens and figma_import_tokens.
 		// Replace Style Dictionary and Tokens Studio's export pipeline for the
