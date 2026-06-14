@@ -49,6 +49,18 @@ This is a drop-in superset — same tools, same Desktop Bridge plugin, plus the 
 
 Keep your `env` (token, flags) as-is. **No plugin re-import needed** — the Desktop Bridge plugin is unchanged from upstream. Restart your MCP client and you'll have `figma_generate_autodocs` / `figma_remove_autodocs` alongside everything you already use.
 
+### Example prompt
+
+With the Desktop Bridge connected, just ask your agent in plain language. To document something that already exists:
+
+> **"Document the Button component set with autodocs."**
+
+Or build and document in one flow:
+
+> **"Make a blue triangle, a red square and a purple hexagon. Give them logical properties (Shape / Color), generate all the variants, put them in a grid, then apply autodocs."**
+
+The agent selects (or builds) the component set and calls `figma_generate_autodocs` — the labeled variant grid appears in Figma, brackets and property labels included, while the Desktop Bridge stays connected the whole time. To take it back off, ask it to **"remove the autodocs from that component set."**
+
 > **🆕 The "not connected until restart" bug is fixed (v1.31.0):** The Desktop Bridge dropping its connection — and only recovering when you closed the plugin, restarted your MCP client, or killed ports by hand — was caused by **zombie MCP processes** squatting the WebSocket port range after a bad shutdown. v1.31.0 force-kills them (`SIGTERM` → `SIGKILL`), sweeps the range every 5 minutes, and adds a shutdown backstop so a server can't zombify in the first place. The plugin now reconnects itself (auto-reconnect watchdog + one-click **Reconnect** button) instead of needing a restart. **Update and re-import the plugin once** to get the fix. [See what's new →](CHANGELOG.md#1310---2026-06-05)
 
 ## What is this?
