@@ -47,15 +47,22 @@ figma.currentPage.selection = [__target];
 `;
 }
 
-function buildGenerateScript(opts: Record<string, unknown>, nodeId?: string): string {
+function buildGenerateScript(opts: Record<string, unknown>, nodeId?: string, arrange = true): string {
 	const entry = `${FONT_PRELUDE}${selectSnippet(nodeId)}
 const __cs = getComponentSet();
 const __standalone = __cs ? null : getStandaloneComponent();
 const __node = __cs || __standalone;
 if (!__node) return { error: 'No component set or component selected. Pass nodeId or select one in Figma.' };
+// Auto-tidy: re-space variants uniformly (40px) and hug the set frame before documenting.
+// Uses the plugin's "quick align" (groupifyQuickAlign); only meaningful for component sets.
+let __arranged = false;
+if (__cs && ${arrange ? "true" : "false"}) {
+  try { await groupifyQuickAlign({ spacing: 40 }); __arranged = true; }
+  catch (e) { /* tidy is best-effort — still document if it fails */ }
+}
 const __opts = Object.assign({ showGrid: __standalone ? false : true }, ${JSON.stringify(opts)});
 await generate(__opts);
-return { generated: true, target: __node.name, type: __node.type, nodeId: __node.id };
+return { generated: true, arranged: __arranged, target: __node.name, type: __node.type, nodeId: __node.id };
 `;
 	return `${AUTODOCS_BODY}\n${entry}`;
 }
@@ -86,13 +93,22 @@ export function registerAutodocsTools(
 		"figma_generate_autodocs",
 		`Generate Obra Autodocs documentation (labeled variant grid with brackets/labels) around a component set or component — the same output as the Obra Autodocs plugin's "Generate docs" command, but run inside the Desktop Bridge so the connection stays alive (running the plugin itself would disconnect the Bridge).
 
-Select the target component set first, or pass its nodeId. Re-running regenerates (replaces) existing docs. Use figma_remove_autodocs to remove them. After generating, screenshot with figma_capture_screenshot to verify.`,
+Select the target component set first, or pass its nodeId. Re-running regenerates (replaces) existing docs. Use figma_remove_autodocs to remove them. After generating, screenshot with figma_capture_screenshot to verify.
+
+By default it first tidies the component set — re-spacing every variant uniformly (40px) and hugging the set frame — via the plugin's "quick align", so the docs are generated on a clean grid. Set arrange:false to skip the tidy and document the set exactly as-is.`,
 		{
 			nodeId: z
 				.string()
 				.optional()
 				.describe(
 					"Component set / component node id to document. If omitted, uses the current selection.",
+				),
+			arrange: z
+				.boolean()
+				.optional()
+				.default(true)
+				.describe(
+					"Tidy the component set before documenting: uniform 40px variant spacing + hug the set frame (plugin 'quick align'). Default true. Set false to document as-is. Ignored for standalone components.",
 				),
 			showGrid: z
 				.boolean()
@@ -123,12 +139,12 @@ Select the target component set first, or pass its nodeId. Re-running regenerate
 				.default(60000)
 				.describe("Execution timeout in ms (default 60000). Large variant sets take longer."),
 		},
-		async ({ nodeId, showGrid, color, showBooleanVisibility, showNestedInstances, fontFamily, timeout }) => {
+		async ({ nodeId, arrange, showGrid, color, showBooleanVisibility, showNestedInstances, fontFamily, timeout }) => {
 			try {
 				const opts: Record<string, unknown> = { showGrid, showBooleanVisibility, showNestedInstances };
 				if (color) opts.color = color;
 				if (fontFamily) opts.fontFamily = fontFamily;
-				const code = buildGenerateScript(opts, nodeId);
+				const code = buildGenerateScript(opts, nodeId, arrange);
 				const connector = await getDesktopConnector();
 				const result = await connector.executeCodeViaUI(code, Math.min(timeout, 120000));
 				return {

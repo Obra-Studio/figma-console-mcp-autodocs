@@ -5,6 +5,12 @@ All notable changes to Figma Console MCP will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.32.1] - 2026-06-14
+
+### Added
+
+- **`figma_generate_autodocs` now auto-tidies the component set before documenting.** It runs the plugin's "quick align" (`groupifyQuickAlign`) first — re-spacing every variant uniformly at 40px and hugging the set frame — so docs are generated on a clean grid. Controlled by a new `arrange` param (default `true`); set `arrange: false` to document a set exactly as-is. Ignored for standalone components. Reuses the already-vendored groupify functions; no re-vendoring needed.
+
 ## [1.32.0] - 2026-06-14
 
 First release of the **Obra Studio fork** (`@obra-studio/figma-console-mcp`), forked from Southleft's `figma-console-mcp` v1.31.0. Adds Obra Autodocs generation that runs inside the Desktop Bridge, so documenting component sets no longer means switching to the Autodocs plugin and tearing down the MCP connection.

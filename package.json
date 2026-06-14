@@ -1,6 +1,6 @@
 {
 	"name": "@obra-studio/figma-console-mcp",
-	"version": "1.32.0",
+	"version": "1.32.1",
 	"description": "Obra Studio fork of figma-console-mcp (by Southleft) adding Obra Autodocs: generate labeled component-variant documentation from inside the Desktop Bridge. The most comprehensive MCP server for Figma — design tokens, variables, components, write tools, version history diff, accessibility audits, FigJam, Slides, and more.",
 	"type": "module",
 	"main": "dist/local.js",
