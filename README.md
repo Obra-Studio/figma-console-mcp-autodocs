@@ -7,6 +7,48 @@
 
 > **Your design system as an API.** Model Context Protocol server that bridges design and development—giving AI assistants complete access to Figma for **extraction**, **creation**, **debugging**, and **bidirectional token sync**.
 
+## ✨ What this fork adds: Obra Autodocs
+
+Two tools that run the [Obra Autodocs](https://www.figma.com/community/plugin/1603778616137404487) generator **from inside the Desktop Bridge** — so your AI can document component-variant sets in one call, without you switching to the Autodocs plugin (which would drop the MCP connection):
+
+- **`figma_generate_autodocs`** — draws the labeled variant grid (brackets + property labels) around a selected component set. Params: `nodeId`, `showGrid`, `color`, `showBooleanVisibility`, `showNestedInstances`, `fontFamily`.
+- **`figma_remove_autodocs`** — removes it again.
+
+Everything else is the full upstream [`figma-console-mcp`](https://github.com/southleft/figma-console-mcp) toolset.
+
+### Install
+
+```bash
+claude mcp add figma-console -s user \
+  -e FIGMA_ACCESS_TOKEN=figd_YOUR_TOKEN_HERE -e ENABLE_MCP_APPS=true \
+  -- npx -y @obra-studio/figma-console-mcp@latest
+```
+
+Or in your MCP client config (`~/.claude.json`, `claude_desktop_config.json`, `.cursor/mcp.json`, …):
+
+```json
+{
+  "mcpServers": {
+    "figma-console": {
+      "command": "npx",
+      "args": ["-y", "@obra-studio/figma-console-mcp@latest"],
+      "env": { "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE", "ENABLE_MCP_APPS": "true" }
+    }
+  }
+}
+```
+
+### Already using `figma-console-mcp`? Switch in one line
+
+This is a drop-in superset — same tools, same Desktop Bridge plugin, plus the autodocs tools. In your config, change the package name only:
+
+```diff
+-      "args": ["-y", "figma-console-mcp@latest"],
++      "args": ["-y", "@obra-studio/figma-console-mcp@latest"],
+```
+
+Keep your `env` (token, flags) as-is. **No plugin re-import needed** — the Desktop Bridge plugin is unchanged from upstream. Restart your MCP client and you'll have `figma_generate_autodocs` / `figma_remove_autodocs` alongside everything you already use.
+
 > **🆕 The "not connected until restart" bug is fixed (v1.31.0):** The Desktop Bridge dropping its connection — and only recovering when you closed the plugin, restarted your MCP client, or killed ports by hand — was caused by **zombie MCP processes** squatting the WebSocket port range after a bad shutdown. v1.31.0 force-kills them (`SIGTERM` → `SIGKILL`), sweeps the range every 5 minutes, and adds a shutdown backstop so a server can't zombify in the first place. The plugin now reconnects itself (auto-reconnect watchdog + one-click **Reconnect** button) instead of needing a restart. **Update and re-import the plugin once** to get the fix. [See what's new →](CHANGELOG.md#1310---2026-06-05)
 
 ## What is this?
@@ -84,7 +126,7 @@ Figma Console MCP connects AI assistants (like Claude) to Figma, enabling:
 
 **Claude Code (CLI):**
 ```bash
-claude mcp add figma-console -s user -e FIGMA_ACCESS_TOKEN=figd_YOUR_TOKEN_HERE -e ENABLE_MCP_APPS=true -- npx -y figma-console-mcp@latest
+claude mcp add figma-console -s user -e FIGMA_ACCESS_TOKEN=figd_YOUR_TOKEN_HERE -e ENABLE_MCP_APPS=true -- npx -y @obra-studio/figma-console-mcp@latest
 ```
 
 **Cursor / Windsurf / Claude Desktop:**
@@ -96,7 +138,7 @@ Add to your MCP config file (see [Where to find your config file](#-where-to-fin
   "mcpServers": {
     "figma-console": {
       "command": "npx",
-      "args": ["-y", "figma-console-mcp@latest"],
+      "args": ["-y", "@obra-studio/figma-console-mcp@latest"],
       "env": {
         "FIGMA_ACCESS_TOKEN": "figd_YOUR_TOKEN_HERE",
         "ENABLE_MCP_APPS": "true"
