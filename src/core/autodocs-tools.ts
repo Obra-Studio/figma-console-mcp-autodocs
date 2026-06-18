@@ -95,7 +95,13 @@ export function registerAutodocsTools(
 
 Select the target component set first, or pass its nodeId. Re-running regenerates (replaces) existing docs. Use figma_remove_autodocs to remove them. After generating, screenshot with figma_capture_screenshot to verify.
 
-By default it first tidies the component set — re-spacing every variant uniformly (40px) and hugging the set frame — via the plugin's "quick align", so the docs are generated on a clean grid. Set arrange:false to skip the tidy and document the set exactly as-is.`,
+By default it first tidies the component set — re-spacing every variant uniformly (40px) and hugging the set frame — via the plugin's "quick align", so the docs are generated on a clean grid. Set arrange:false to skip the tidy and document the set exactly as-is.
+
+Pass variableModes to also render the variant grid in specific variable modes (e.g. light/dark/theme) — each mode adds a mode-specific copy of the grid. Get the collection id + mode ids/names from figma_get_variables.
+
+Optional doc-richness toggles: showTitle (name above the grid), showDescription / showDocLink (pull the component's Figma description / doc link, no-op if absent), docLabel (custom suffix on the doc frame name), hidePropertyNames (values-only labels), gridAlignment ('auto'/'x'/'y' grid orientation), autoLayoutExtras (auto-layout the boolean/nested sections).
+
+Boolean/nested refinements (only apply when their parent toggle is on): booleanCombination ('individual'/'combined'/'all'), booleanDisplayMode ('list'/'grid'), enabledBooleanProps (whitelist of boolean prop names), enabledNestedInstances (whitelist of nested set names), allowSpanning (let oversized variants span grid cells).`,
 		{
 			nodeId: z
 				.string()
@@ -133,17 +139,166 @@ By default it first tidies the component set — re-spacing every variant unifor
 				.string()
 				.optional()
 				.describe("Override the label font family (defaults to Inter)."),
+			showTitle: z
+				.boolean()
+				.optional()
+				.default(false)
+				.describe("Draw the component/component-set name as a title above the variant grid."),
+			showDescription: z
+				.boolean()
+				.optional()
+				.default(false)
+				.describe(
+					"Show the component's description above the grid (from its Figma description). No-op if the component has no description.",
+				),
+			showDocLink: z
+				.boolean()
+				.optional()
+				.default(false)
+				.describe(
+					"Show the component's first documentation link as a hyperlink below the grid. No-op if the component has no documentation links.",
+				),
+			docLabel: z
+				.string()
+				.optional()
+				.describe("Append custom text to the generated doc wrapper frame's name (for organizing/identifying docs)."),
+			hidePropertyNames: z
+				.boolean()
+				.optional()
+				.default(false)
+				.describe("Show only property values in variant labels, omitting the 'PropName=' prefix."),
+			gridAlignment: z
+				.enum(["auto", "x", "y"])
+				.optional()
+				.default("auto")
+				.describe(
+					"Force variant grid orientation: 'x' lays variants along columns, 'y' along rows, 'auto' detects from the set's layout (default). Non-auto transposes the set if needed. Component sets only.",
+				),
+			autoLayoutExtras: z
+				.boolean()
+				.optional()
+				.default(false)
+				.describe(
+					"Lay out the boolean-visibility and nested-instance doc sections with Figma auto-layout instead of fixed positions, so they reflow when edited.",
+				),
+			booleanCombination: z
+				.enum(["individual", "combined", "all"])
+				.optional()
+				.default("individual")
+				.describe(
+					"Which boolean-property combinations to document: 'individual' = each prop on its own (default); 'combined' = each prop alone plus all together; 'all' = every non-empty subset. Only applies when showBooleanVisibility is true.",
+				),
+			booleanDisplayMode: z
+				.enum(["list", "grid"])
+				.optional()
+				.default("list")
+				.describe(
+					"Layout for the boolean-visibility docs: 'list' stacks them vertically (default), 'grid' arranges them in a grid. Only applies when showBooleanVisibility is true.",
+				),
+			enabledBooleanProps: z
+				.array(z.string())
+				.optional()
+				.describe(
+					"Whitelist of boolean property names to document; omit to document all. Only applies when showBooleanVisibility is true.",
+				),
+			enabledNestedInstances: z
+				.array(z.string())
+				.optional()
+				.describe(
+					"Whitelist of nested component-set names to document; omit to document all. Only applies when showNestedInstances is true.",
+				),
+			allowSpanning: z
+				.boolean()
+				.optional()
+				.default(false)
+				.describe(
+					"Allow oversized variants to span multiple grid cells during layout (component sets only).",
+				),
+			variableModes: z
+				.object({
+					collectionId: z
+						.string()
+						.describe(
+							"Variable collection id whose modes to render (the `id` field of a collection from figma_get_variables).",
+						),
+					modes: z
+						.array(
+							z.object({
+								modeId: z
+									.string()
+									.describe("Mode id within the collection (collection.modes[].id from figma_get_variables)."),
+								name: z.string().describe("Label drawn above this mode's grid (e.g. 'Dark', 'Brand')."),
+							}),
+						)
+						.min(1)
+						.describe("One or more modes to document. Each renders an extra copy of the variant grid in that mode."),
+				})
+				.optional()
+				.describe(
+					"Also document the component in specific variable modes (e.g. light/dark/theme) — each mode adds a mode-specific copy of the variant grid alongside the default. Discover collectionId + mode ids/names with figma_get_variables. Single collection per call.",
+				),
 			timeout: z
 				.number()
 				.optional()
 				.default(60000)
 				.describe("Execution timeout in ms (default 60000). Large variant sets take longer."),
 		},
-		async ({ nodeId, arrange, showGrid, color, showBooleanVisibility, showNestedInstances, fontFamily, timeout }) => {
+		async ({
+			nodeId,
+			arrange,
+			showGrid,
+			color,
+			showBooleanVisibility,
+			showNestedInstances,
+			fontFamily,
+			showTitle,
+			showDescription,
+			showDocLink,
+			docLabel,
+			hidePropertyNames,
+			gridAlignment,
+			autoLayoutExtras,
+			booleanCombination,
+			booleanDisplayMode,
+			enabledBooleanProps,
+			enabledNestedInstances,
+			allowSpanning,
+			variableModes,
+			timeout,
+		}) => {
 			try {
-				const opts: Record<string, unknown> = { showGrid, showBooleanVisibility, showNestedInstances };
+				const opts: Record<string, unknown> = {
+					showGrid,
+					showBooleanVisibility,
+					showNestedInstances,
+					showTitle,
+					showDescription,
+					showDocLink,
+					hidePropertyNames,
+					gridAlignment,
+					autoLayoutExtras,
+					booleanCombination,
+					booleanDisplayMode,
+					allowSpanning,
+				};
 				if (color) opts.color = color;
 				if (fontFamily) opts.fontFamily = fontFamily;
+				if (docLabel) opts.docLabel = docLabel;
+				if (enabledBooleanProps) opts.enabledBooleanProps = enabledBooleanProps;
+				if (enabledNestedInstances) opts.enabledNestedInstances = enabledNestedInstances;
+				if (variableModes) {
+					// The vendored plugin's live mode paths key off `groups` (component-set path
+					// reads groups[].collections; standalone path reads collectionId + modes; both
+					// gate on groups being non-empty). Build all three from the single collection.
+					opts.variableModes = {
+						collectionId: variableModes.collectionId,
+						modes: variableModes.modes,
+						groups: variableModes.modes.map((m) => ({
+							name: m.name,
+							collections: [{ collectionId: variableModes.collectionId, modeId: m.modeId }],
+						})),
+					};
+				}
 				const code = buildGenerateScript(opts, nodeId, arrange);
 				const connector = await getDesktopConnector();
 				const result = await connector.executeCodeViaUI(code, Math.min(timeout, 120000));
